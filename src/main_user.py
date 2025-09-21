@@ -1,9 +1,11 @@
 """Entrypoint for the user entity of this project."""
 
 import os
-import yaml
 from enum import Enum
 import shutil
+
+from user.antares import AntaresStudy
+from utils.config import read_config
 
 USER_CONFIG_FILE_NAME = "config_user.yaml"
 
@@ -12,15 +14,6 @@ class ZipMethod(Enum):
     SEVEN_Z_ENV = "7z_env"
     SEVEN_Z_CFG = "7z_cfg"
     BUILTIN = "zipfile"
-
-def read_config(config_file_name: str) -> dict:
-    """Reads the USER_CONFIG_FILE and returns the configuration as a dictionary."""
-    config_file_path = os.path.join("config", config_file_name)
-    if not os.path.exists(config_file_path):
-        raise FileNotFoundError(f"Configuration file {config_file_path} not found.")
-    with open(config_file_path, 'r') as file:
-        config = yaml.safe_load(file)
-    return config
 
 
 def identify_best_zip_method(config: dict) -> Enum:
@@ -46,4 +39,17 @@ def identify_best_zip_method(config: dict) -> Enum:
 if __name__ == "__main__":
     config = read_config(USER_CONFIG_FILE_NAME)
     print("User configuration loaded:", config)
-    identify_best_zip_method()
+
+    print(identify_best_zip_method(config))
+
+    ANTARES_STUDY = r"data\user\ant8.8"
+    print("this is a study: ")
+    print(AntaresStudy.is_valid_study(ANTARES_STUDY))
+
+    astudy = AntaresStudy(ANTARES_STUDY)
+    print("size on disk:")
+    print(astudy.get_size_on_disk())
+
+    print("is this study void of output?")
+    print(astudy.is_output_empty())
+
