@@ -1,15 +1,33 @@
 import os
+import configparser
+from utils.smart_zip import smart_zip_folder
+from utils.time_utils import get_datetime_stamp
 
 class AntaresStudy:
     def __init__(self, study_path):
         self.study_path = os.path.abspath(study_path)
 
+    def get_antares_version(self) -> str:
+        """Reads an antares file and returns the version string as parsed from INI format."""
+        config = configparser.ConfigParser()
+        ini_file_path = os.path.join(self.study_path, "study.antares")
+        config.read(ini_file_path)
+
+        if "antares" not in config:
+            raise ValueError("Section [antares] not found in file.")
+
+        if "version" not in config["antares"]:
+            raise ValueError("Version key not found in [antares] section.")
+
+        return config["antares"]["version"].strip()
+
+
     def get_size_on_disk(self) -> float:
         """Return size in megabytes"""
         total_size = 0
-        for dirpath, dirnames, filenames in os.walk(self.study_path):
-            for f in filenames:
-                fp = os.path.join(dirpath, f)
+        for folder_path, folder_names, file_names in os.walk(self.study_path):
+            for f in file_names:
+                fp = os.path.join(folder_path, f)
                 if os.path.isfile(fp):
                     total_size += os.path.getsize(fp)
         return total_size / (1024 * 1024)
@@ -27,6 +45,14 @@ class AntaresStudy:
         if len(contents) == 1 and contents[0] == "maps":
             return True
         return False
+
+    def package_study(self, output_zip_folder_path, user_7z_path=None):
+        study_folder_name = os.path.basename(self.study_path)
+        zip_file_name = get_datetime_stamp("", "_", "") + "-" + study_folder_name + ".zip"
+        output_zip_file_path = os.path.join(output_zip_folder_path, zip_file_name)
+        output_zip_file_path = os.path.abspath(output_zip_file_path)
+        exclude_folder_names = ["output/"]
+        smart_zip_folder(self.study_path, output_zip_file_path, exclude_folder_names, user_7z_path)
 
     # static method to check if a study is a valid Antares study
     @staticmethod
