@@ -5,6 +5,7 @@ $~*
 !.vscode/launch.json
 .idea/
 data/*
+*/debug*.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

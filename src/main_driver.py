@@ -1,0 +1,72 @@
+# import os
+import os
+import sys
+import uuid
+# import zipfile
+# import shutil
+# import pickle
+# import threading
+# from queue import PriorityQueue
+# from pathlib import Path
+# from typing import List, Optional, Dict, Any
+from typing import Annotated
+#
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+
+from driver.jobs import Job, JobQueue
+from utils.config import read_config
+
+DRIVER_CONFIG_FILE_NAME = "config_driver.yaml"
+
+
+app = FastAPI(title="Antares Winjobs Driver")
+config = read_config(DRIVER_CONFIG_FILE_NAME)
+job_queue = JobQueue()
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+@app.get("/wd")
+def health():
+    wd = os.getcwd()
+    return {"cwd": wd, "sys.path": sys.path}
+
+@app.post("/submit_job")
+async def submit_job(
+    zip_file: Annotated[UploadFile, File()],
+    priority: Annotated[int, Form()],
+    submitter: Annotated[str, Form()]
+):
+    """
+    Submit a job as a zip upload.
+
+    Args:
+        zip_file: must be a .zip file containing the Antares study to run
+        priority: 1-100
+        submitter: userid string identifying the submitter
+    """
+    if not zip_file.filename.endswith(".zip"):
+        raise HTTPException(status_code=400, detail="Only .zip uploads supported (for now).")
+
+    # save uploaded zip on the driver server
+    local_zip_folder_path = os.path.abspath(config["new_jobs_zip_folder_path"])
+    local_zip_file = os.path.join(local_zip_folder_path, zip_file.filename)
+    with open(local_zip_file, "wb") as f:
+        contents = await zip_file.read()
+        f.write(contents)
+
+    # create a new job
+    new_job = Job(submitter, priority, local_zip_file, config)
+    new_job.prepare_job_for_queue()
+    job_queue.add_job(new_job)
+
+
+    return {"job_id": new_job.id, "priority": new_job.priority, "workload": new_job.workload, "job_queue_length": job_queue.get_queue_length()}
+
+
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="localhost", port=8000)

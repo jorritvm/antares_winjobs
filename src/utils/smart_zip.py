@@ -130,7 +130,7 @@ def smart_unzip_file(input_zip_file_path: str, output_folder_path: str, user_7z_
     else:
         # Built-in zipfile
         unzip_with_builtin(input_zip_file_path, output_folder_path)
-
+    return output_folder_path
 
 def unzip_with_7z(input_zip_file_path: str, output_folder_path: str, seven_zip_exe: str):
     """Unzip a folder using 7z."""
