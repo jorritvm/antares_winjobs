@@ -46,13 +46,16 @@ class AntaresStudy:
             return True
         return False
 
-    def package_study(self, output_zip_folder_path, user_7z_path=None):
+    def package_study(self, output_zip_folder_path, user_7z_path=None) -> str:
+        """Package the study into a zip file, excluding the output folder.
+        :return The path to the created zip file.
+        """
         study_folder_name = os.path.basename(self.study_path)
         zip_file_name = get_datetime_stamp("", "_", "") + "-" + study_folder_name + ".zip"
         output_zip_file_path = os.path.join(output_zip_folder_path, zip_file_name)
         output_zip_file_path = os.path.abspath(output_zip_file_path)
-        exclude_folder_names = ["output/"]
-        smart_zip_folder(self.study_path, output_zip_file_path, exclude_folder_names, user_7z_path)
+        exclude_folder_names = ["output"]
+        return smart_zip_folder(self.study_path, output_zip_file_path, exclude_folder_names, user_7z_path)
 
     # static method to check if a study is a valid Antares study
     @staticmethod
