@@ -16,3 +16,16 @@ The repository contains 3 modules:
 Repo is built with uv.
 Sync using `uv sync` command.
 
+## Run driver:
+```commandline
+uvicorn src.main_driver:app --reload
+```
+or more modernly use the FastAPI CLI:
+during development, with hot-reload and bound to localhost:
+```commandline
+fastapi dev src\main_driver.py
+```
+or to run without hot-reload and bound to all interfaces:
+```commandline
+fastapi run src\main_driver.py
+```
