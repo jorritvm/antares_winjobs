@@ -1,4 +1,4 @@
-new_jobs_zip_folder_path: data/driver/packed # path, relative to project root or absolute
-new_jobs_unpack_folder_path: data/driver/unpacked # path, relative to project root or absolute
-finished_work_collection: 'symlink' # options: ['symlink', 'copy']
-7_zip_file_path: "C:/Program Files/7-Zip/7z.exe" # leave empty if 7-Zip is in PATH or not on system
+new_jobs_zip_folder_path: data/driver/zip # path, relative to project root or absolute
+new_jobs_study_folder_path: data/driver/study # path, relative to project root or absolute
+finished_work_collection: symlink # options: ['symlink', 'copy']
+7_zip_file_path: C:/Program Files/7-Zip/7z.exe # leave empty if 7-Zip is in PATH or not on system

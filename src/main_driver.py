@@ -1,7 +1,6 @@
 # import os
 import os
 import sys
-import uuid
 # import zipfile
 # import shutil
 # import pickle
@@ -41,6 +40,8 @@ async def submit_job(
     """
     Submit a job as a zip upload.
 
+    Can't use a pydantic model here because it's a multipart form-data request and not a JSON body.
+
     Args:
         zip_file: must be a .zip file containing the Antares study to run
         priority: 1-100
@@ -61,8 +62,7 @@ async def submit_job(
     new_job.prepare_job_for_queue()
     job_queue.add_job(new_job)
 
-
-    return {"job_id": new_job.id, "priority": new_job.priority, "workload": new_job.workload, "job_queue_length": job_queue.get_queue_length()}
+    return {"job_id": new_job.id, "workload_length": len(new_job.workload), "job_queue_length": job_queue.get_queue_length()}
 
 
 

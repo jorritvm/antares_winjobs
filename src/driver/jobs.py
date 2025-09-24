@@ -17,7 +17,7 @@ class Job:
 
     def prepare_job_for_queue(self):
         """Prepare a job for processing by unzipping it and estimating work."""
-        extraction_folder_path = self.config.get("new_jobs_unpack_folder_path", "")
+        extraction_folder_path = self.config.get("new_jobs_study_folder_path", "")
         seven_zip_exe = self.config.get("7_zip_file_path", None)
         study_folder_path = smart_unzip_file(self.zip_file_path, extraction_folder_path, seven_zip_exe)
         self.antares_study = AntaresStudy(study_folder_path)
