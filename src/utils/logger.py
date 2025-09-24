@@ -7,11 +7,16 @@ from other modules in the file output handler.
 import logging
 import os
 
+from utils.time_utils import get_datetime_stamp
+
+LOGLEVEL = logging.DEBUG
+
 def setup_root_logger(file_name: str):
     os.makedirs("logs", exist_ok=True)
-    log_path = os.path.join("logs", f"{file_name}.txt")
+    prefix = get_datetime_stamp("", "_", "") 
+    log_path = os.path.join("logs", f"{prefix}-{file_name}.txt")
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=LOGLEVEL,
         format="%(asctime)s [%(levelname)s] %(message)s",
         datefmt="%Y-%m-%dT%H:%M:%S",
         handlers=[
