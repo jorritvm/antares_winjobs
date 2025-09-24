@@ -1,26 +1,20 @@
 # import os
 import os
 import sys
-# import zipfile
-# import shutil
-# import pickle
-# import threading
-# from queue import PriorityQueue
-# from pathlib import Path
-# from typing import List, Optional, Dict, Any
 from typing import Annotated
-#
+
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 
 from driver.jobs import Job, JobQueue
 from utils.config import read_config
+from utils.logger import setup_root_logger
 
 DRIVER_CONFIG_FILE_NAME = "config_driver.yaml"
 
-
+setup_root_logger("driver.log")
 app = FastAPI(title="Antares Winjobs Driver")
 config = read_config(DRIVER_CONFIG_FILE_NAME)
-job_queue = JobQueue()
+job_queue = JobQueue(config["persisted_queue_folder_path"])
 
 @app.get("/health")
 def health():
@@ -63,8 +57,6 @@ async def submit_job(
     job_queue.add_job(new_job)
 
     return {"job_id": new_job.id, "workload_length": len(new_job.workload), "job_queue_length": job_queue.get_queue_length()}
-
-
 
 
 if __name__ == "__main__":

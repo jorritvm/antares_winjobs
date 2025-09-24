@@ -1,4 +1,6 @@
 import itertools
+import pickle
+import os
 import uuid
 from utils.smart_zip import smart_unzip_file
 from utils.antares import AntaresStudy
@@ -37,16 +39,42 @@ class Job:
 
 
 class JobQueue:
-    def __init__(self):
-        self._queue = PriorityQueue()
-        self._counter = itertools.count()
-        self._finished: list[Job] = []
+    def __init__(self, persisted_queue_folder_path: str):
+        self.persisted_queue_folder_path = persisted_queue_folder_path
+        self.queue_file = os.path.join(persisted_queue_folder_path, "queue.pkl")
+        self.finished_file = os.path.join(persisted_queue_folder_path, "finished.pkl")
+        self.counter = itertools.count() # unique sequence count to establish round robin for same-priority jobs
+        self.queue = PriorityQueue() # (priority, count, job) tuples that are the jobs that aren't done yet
+        self.finished: list[Job] = [] # holds jobs that are finished
+        self.load_state()
+
+    def load_state(self):
+        # Load queue
+        if os.path.exists(self.queue_file):
+            with open(self.queue_file, "rb") as f:
+                jobs = pickle.load(f)
+                for job in jobs:
+                    self.queue.put(job)
+        # Load finished list
+        if os.path.exists(self.finished_file):
+            with open(self.finished_file, "rb") as f:
+                self.finished = pickle.load(f)
+
+    def persist_state(self):
+        # Persist queue
+        queue_items = list(self.queue.queue)
+        with open(self.queue_file, "wb") as f:
+            pickle.dump(queue_items, f)
+        # Persist finished list
+        with open(self.finished_file, "wb") as f:
+            pickle.dump(self.finished, f)
 
     def get_queue_length(self):
-        return self._queue.qsize()
+        return self.queue.qsize()
 
     def add_job(self, job: Job):
-        self._queue.put((job.priority, next(self._counter), job))
+        self.queue.put((job.priority, next(self.counter), job))
+        self.persist_state()
 
     # def get_work(self, amount, block=True, timeout=None):
     #     """Thread-safe: pops a job, assigns work, reinserts if not done."""
