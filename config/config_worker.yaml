@@ -1,0 +1,7 @@
+server_ip: 127.0.0.1
+server_port: 8000
+new_tasks_zip_folder_path: data/worker/zip # path, relative to project root or absolute
+new_tasks_study_folder_path: data/worker/study # path, relative to project root or absolute
+7_zip_file_path: C:/Program Files/7-Zip/7z.exe # leave empty if 7-Zip is in PATH or not on system
+max_cores_to_use: 2 # max number of CPU cores to use, set to 0 to use all available cores
+antares_file_path: C:\program files\rte\Antares\8.8.10\bin\antares-8.8-solver.exe
