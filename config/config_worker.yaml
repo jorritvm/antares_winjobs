@@ -1,7 +1,20 @@
+# enter IPv4 address for the driver
 server_ip: 127.0.0.1
+
+# enter port for the driver
 server_port: 8000
-new_tasks_zip_folder_path: data/worker/zip # path, relative to project root or absolute
-new_tasks_study_folder_path: data/worker/study # path, relative to project root or absolute
+
+# enter absolute path where clean study zip files can be stored, make sure this path uses a symlink known by the workers too
+new_tasks_zip_folder_path: C:\links\LENOVO_C\dev\python\antares_winjobs\data\driver\zip
+
+# enter absolute path where studies are unzipped, make sure this path uses a symlink known by the workers too
+new_tasks_study_folder_path: C:\links\LENOVO_C\dev\python\antares_winjobs\data\driver\study
+
+# enter aboslute path to 7z.exe. Leave empty if 7-Zip is already on PATH or not on system at all
 7_zip_file_path: C:/Program Files/7-Zip/7z.exe # leave empty if 7-Zip is in PATH or not on system
-max_cores_to_use: 2 # max number of CPU cores to use, set to 0 to use all available cores
+
+# max number of CPU cores to use, set to 0 to use all available cores
+max_cores_to_use: 2
+
+# absolute path to Antares solver executable
 antares_file_path: C:\program files\rte\Antares\8.8.10\bin\antares-8.8-solver.exe

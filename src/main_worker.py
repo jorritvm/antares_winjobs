@@ -39,7 +39,7 @@ class Worker:
         return os.path.abspath(antares_path)
 
     def get_server_uri(self):
-        uri = f"http://{self.config['server_ip']}:{self.config['server_port']}/"
+        uri = f"http://{self.config['driver_ip']}:{self.config['driver_port']}/"
         return uri
 
     def notify_server_ready(self):

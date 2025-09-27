@@ -1,5 +1,14 @@
-new_jobs_zip_folder_path: data/driver/zip # path, relative to project root or absolute
-new_jobs_study_folder_path: data/driver/study # path, relative to project root or absolute
+# enter absolute path where clean study zip files can be stored, make sure this path uses a symlink known by the workers too
+new_jobs_zip_folder_path: C:\links\LENOVO_C\dev\python\antares_winjobs\data\driver\zip
+
+# enter absolute path where studies are unzipped, make sure this path uses a symlink known by the workers too
+new_jobs_study_folder_path: C:\links\LENOVO_C\dev\python\antares_winjobs\data\driver\study
+
+# define what the driver should do with finished work collections: copy or create a symlink to the original folder
 finished_work_collection: symlink # options: ['symlink', 'copy']
-7_zip_file_path: C:/Program Files/7-Zip/7z.exe # leave empty if 7-Zip is in PATH or not on system
-persisted_queue_folder_path: data/driver/queue # path, relative to project root or absolute
+
+# enter aboslute path to 7z.exe. Leave empty if 7-Zip is already on PATH or not on system at all
+7_zip_file_path: C:/Program Files/7-Zip/7z.exe
+
+# enter path (absolute, or relative to project root) where the driver can persist its queue of tasks
+persisted_queue_folder_path: data/driver/queue

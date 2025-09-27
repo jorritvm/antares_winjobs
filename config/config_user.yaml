@@ -1,1 +1,2 @@
-7_zip_file_path: C:/Program Files/7-Zip/7z.exe # leave empty if 7-Zip is in PATH or not on system
+# enter aboslute path to 7z.exe. Leave empty if 7-Zip is already on PATH or not on system at all
+7_zip_file_path: C:/Program Files/7-Zip/7z.exe
