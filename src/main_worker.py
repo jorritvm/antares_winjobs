@@ -44,7 +44,7 @@ class Worker:
 
     def notify_server_ready(self):
         # Stub: Notify server, get work assignment
-        response = requests.post(f"{self.server_url}/get_work", json={"cores": self.max_cores_to_use})
+        response = requests.post(f"{self.server_uri}/get_work", json={"cores": self.max_cores_to_use})
         return response.json()  # Should contain model_path, years
 
     def fetch_model(self, model_path):

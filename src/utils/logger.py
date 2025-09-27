@@ -9,11 +9,11 @@ import os
 
 from utils.time_utils import get_datetime_stamp
 
-LOGLEVEL = logging.DEBUG
+LOGLEVEL = logging.INFO
 
 def setup_root_logger(file_name: str):
     os.makedirs("logs", exist_ok=True)
-    prefix = get_datetime_stamp("", "_", "") 
+    prefix = get_datetime_stamp("", "_", "")
     log_path = os.path.join("logs", f"{prefix}-{file_name}.txt")
     logging.basicConfig(
         level=LOGLEVEL,

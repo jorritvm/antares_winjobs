@@ -140,7 +140,6 @@ def unzip_with_7z(input_zip_file_path: str, output_folder_path: str, seven_zip_e
     cmd = [seven_zip_exe, "x", input_zip_file_path, f"-o{output_folder_path}"]
     subprocess.run(cmd, check=True)
 
-
 def unzip_with_builtin(input_zip_file_path: str, output_folder_path: str):
     """Unzip a folder using Python's built-in zipfile module."""
     with ZipFile(input_zip_file_path, "r") as zipf:

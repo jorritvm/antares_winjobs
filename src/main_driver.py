@@ -20,13 +20,8 @@ job_queue = JobQueue(config["persisted_queue_folder_path"])
 @app.get("/health")
 def health():
     logging.info("Endpoint /health called.")
-    return {"status": "ok"}
-
-@app.get("/wd")
-def health():
-    logging.info("Endpoint /wd called.")
     wd = os.getcwd()
-    return {"cwd": wd, "sys.path": sys.path}
+    return {"status": "ok", "cwd": wd, "sys.path": sys.path}
 
 @app.post("/submit_job")
 async def submit_job(
@@ -51,17 +46,23 @@ async def submit_job(
     # save uploaded zip on the driver server
     local_zip_folder_path = os.path.abspath(config["new_jobs_zip_folder_path"])
     local_zip_file = os.path.join(local_zip_folder_path, zip_file.filename)
-    with open(local_zip_file, "wb") as f:
-        logging.info(f"Saving uploaded zip file to: {local_zip_file}")
-        contents = await zip_file.read()
-        f.write(contents)
+    if os.path.exists(local_zip_file):
+        logging.error(f"File {zip_file.filename} already exists on server.")
+        return {"error": f"File {zip_file.filename} already exists on server. Use a different file name."}
+    else:
+        with open(local_zip_file, "wb") as f:
+            logging.info(f"Saving uploaded zip file to: {local_zip_file}")
+            contents = await zip_file.read()
+            f.write(contents)
 
     # create a new job
     new_job = Job(submitter, priority, local_zip_file, config)
-    new_job.prepare_job_for_queue()
-    job_queue.add_job(new_job)
-
-    return {"job_id": new_job.id, "workload_length": len(new_job.workload), "job_queue_length": job_queue.get_queue_length()}
+    if new_job.validate_job_parameters():
+        new_job.prepare_job_for_queue()
+        job_queue.add_job(new_job)
+        return {"job_id": new_job.id, "workload_length": len(new_job.workload), "job_queue_length": job_queue.get_queue_length()}
+    else:
+        return {"error": "Job validation failed. See server logs for details."}
 
 
 if __name__ == "__main__":
