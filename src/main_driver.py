@@ -64,6 +64,50 @@ async def submit_job(
     else:
         return {"error": "Job validation failed. See server logs for details."}
 
+@app.get("/job_details/{job_id}")
+async def job_details(job_id: str):
+    logging.info(f"Endpoint /job_details/{job_id} called.")
+    all_jobs = await jobs_overview()
+    for job in all_jobs:
+        if job["id"] == job_id:
+            return job
+
+@app.get("/jobs_overview")
+async def jobs_overview():
+    """Endpoint to return all details of all jobs to the caller."""
+    logging.info("Endpoint /jobs_overview called.")
+    jobs = []
+
+    # Queued jobs
+    for prio, cnt, job in list(job_queue.queue.queue):
+        jobs.append({
+            "id": job.id,
+            "submitter": job.submitter,
+            "zip_file_path": job.zip_file_path,
+            "study_name": job.antares_study.study_name,
+            "study_path": job.antares_study.study_path,
+            "workload_length": len(job.workload) if job.workload else 0,
+            "percentage_complete": job.percentage_complete,
+            "status": "queued",
+            "queue_priority": prio,
+            "queue_counter": cnt
+        })
+
+    # Finished jobs
+    for job in job_queue.finished:
+        jobs.append({
+            "id": job.id,
+            "submitter": job.submitter,
+            "zip_file_path": job.zip_file_path,
+            "study_name": job.antares_study.study_name,
+            "study_path": job.antares_study.study_path,
+            "workload_length": len(job.workload) if job.workload else 0,
+            "percentage_complete": job.percentage_complete,
+            "status": "finished"
+        })
+    return jobs
+
+
 
 if __name__ == "__main__":
     import uvicorn

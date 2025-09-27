@@ -19,6 +19,7 @@ class Job:
         self.config: dict = config
         self.antares_study: AntaresStudy = None
         self.workload: list[int] = None
+        self.percentage_complete: int = 0  # 0 - 100
 
     def validate_job_parameters(self) -> bool:
         """Validate job parameters such as priority and submitter."""
