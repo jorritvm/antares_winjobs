@@ -1,3 +1,4 @@
+import logging
 import itertools
 import pickle
 import os
@@ -9,16 +10,19 @@ from queue import PriorityQueue
 
 class Job:
     def __init__(self, submitter: str, priority: int, zip_file_path: str, config):
+        logging.info(f"Creating new Job instance from {os.path.basename(zip_file_path)}.")
         self.id = str(uuid.uuid4())  # unique job id
         self.submitter: str = submitter
         self.priority: int = priority
         self.zip_file_path: str = zip_file_path  # file path to the uploaded zip file
+        self.zip_file_name: str = os.path.basename(zip_file_path)
         self.config: dict = config
         self.antares_study: AntaresStudy = None
         self.workload: list[int] = None
 
     def prepare_job_for_queue(self):
         """Prepare a job for processing by unzipping it and estimating work."""
+        logging.info(f"Preparing Job instance for {self.zip_file_name}: unzipping and wrapping in Antares class instance.")
         extraction_folder_path = self.config.get("new_jobs_study_folder_path", "")
         seven_zip_exe = self.config.get("7_zip_file_path", None)
         study_folder_path = smart_unzip_file(self.zip_file_path, extraction_folder_path, seven_zip_exe)
