@@ -1,11 +1,14 @@
-import os
 import configparser
+import logging
+import os
+from utils.ini import robust_read_ini
 from utils.smart_zip import smart_zip_folder
 from utils.time_utils import get_datetime_stamp
 
 class AntaresStudy:
     def __init__(self, study_path):
         self.study_path = os.path.abspath(study_path)
+        self.study_name = os.path.basename(self.study_path)
 
     def get_antares_version(self) -> str:
         """Reads an antares file and returns the version string as parsed from INI format."""
@@ -20,7 +23,6 @@ class AntaresStudy:
             raise ValueError("Version key not found in [antares] section.")
 
         return config["antares"]["version"].strip()
-
 
     def get_size_on_disk(self) -> float:
         """Return size in megabytes"""
@@ -46,10 +48,11 @@ class AntaresStudy:
             return True
         return False
 
-    def package_study(self, output_zip_folder_path, user_7z_path=None) -> str:
+    def package_study(self, output_zip_folder_path: str, user_7z_path: str = None) -> str:
         """Package the study into a zip file, excluding the output folder.
         :return The path to the created zip file.
         """
+        logging.info(f"Packageing study {self.study_name} into zip file")
         study_folder_name = os.path.basename(self.study_path)
         zip_file_name = get_datetime_stamp("", "_", "") + "-" + study_folder_name + ".zip"
         output_zip_file_path = os.path.join(output_zip_folder_path, zip_file_name)
@@ -72,8 +75,9 @@ class AntaresStudy:
           playlist_year - = 0
           playlist_year - = 1
         """
+        logging.info(f"Fetching active playlist years for study {self.study_name}")
         ini_file_path = os.path.join(self.study_path, "settings", "generaldata.ini")
-        config = read_generaldata_ini(ini_file_path)
+        config = robust_read_ini(ini_file_path)
         if "general" not in config:
             raise ValueError("Section [general] not found in settings file.")
         if "nbyears" not in config["general"]:
@@ -92,9 +96,6 @@ class AntaresStudy:
                         playlist.remove(year)
         return playlist
 
-
-
-
     # static method to check if a study is a valid Antares study
     @staticmethod
     def is_valid_study(study_path):
@@ -111,29 +112,4 @@ class AntaresStudy:
 
         return True
 
-def read_generaldata_ini(path):
-    """settings/generaldata.ini is not a valid ini file due to key repetitions in the [playlist] section.
-    This method will collect values for repeated keys into lists."""
-    sections = dict()
-    current_section = None
 
-    with open(path, encoding="utf-8") as f:
-        for lineno, line in enumerate(f, start=1):
-            line = line.strip()
-            if not line or line.startswith(";") or line.startswith("#"):
-                continue
-            if line.startswith("[") and line.endswith("]"):
-                current_section = line[1:-1]
-                sections[current_section] = dict()
-                continue
-            if "=" in line and current_section:
-                key, value = map(str.strip, line.split("=", 1))
-                if current_section == "playlist":
-                    if key not in sections[current_section]:
-                        sections[current_section][key] = []
-                    sections[current_section][key].append(value)
-                else:
-                    sections[current_section][key] = value
-            else:
-                print(f"Skipping line {lineno}: {line}")
-    return sections
