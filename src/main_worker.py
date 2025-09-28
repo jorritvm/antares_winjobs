@@ -10,18 +10,15 @@ WORKER_CONFIG_FILE_NAME = "config_worker.yaml"
 class Worker:
     def __init__(self, config_file_name):
         self.config = read_config(config_file_name)
-        self.hostname = self.determine_hostname()
+        self.hostname = socket.gethostname()
         self.max_cores_to_use = self.determine_cores()
         self.antares_path = self.find_antares()
         self.server_uri = self.get_server_uri()
         self.local_zip_folder_path = os.path.abspath(self.config["new_tasks_zip_folder_path"])
         self.local_study_folder_path = os.path.abspath(self.config["new_tasks_study_folder_path"])
 
-    def determine_hostname(self):
-        return socket.gethostname()
-
     def determine_cores(self):
-        """Determine number of CPU cores to use."""
+        """Determine number of CPU cores to use. User can specify not to use all system cores."""
         if self.config["max_cores_to_use"] == 0:
             return os.cpu_count()
         else:
@@ -42,9 +39,10 @@ class Worker:
         uri = f"http://{self.config['driver_ip']}:{self.config['driver_port']}/"
         return uri
 
-    def notify_server_ready(self):
-        # Stub: Notify server, get work assignment
-        response = requests.post(f"{self.server_uri}/get_work", json={"cores": self.max_cores_to_use})
+    def notify_server_ready(self) -> dict:
+        """Notify server, get work assignment"""
+        response = requests.post(f"{self.server_uri}/get_work",
+                                 json={"worker": self.hostname, "cores": self.max_cores_to_use})
         return response.json()  # Should contain model_path, years
 
     def fetch_model(self, model_path):

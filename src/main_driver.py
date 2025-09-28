@@ -7,6 +7,7 @@ from typing import Annotated
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 
 from driver.jobs import Job, JobQueue
+from driver.payload_models import GetWorkRequest, TaskResponse
 from utils.config import read_config
 from utils.logger import setup_root_logger
 
@@ -67,6 +68,7 @@ async def submit_job(
 @app.get("/job_details/{job_id}")
 async def job_details(job_id: str):
     logging.info(f"Endpoint /job_details/{job_id} called.")
+    # note: not very efficient but ok for now, queues wont be huge
     all_jobs = await jobs_overview()
     for job in all_jobs:
         if job["id"] == job_id:
@@ -106,6 +108,16 @@ async def jobs_overview():
             "status": "finished"
         })
     return jobs
+
+@app.post("/get_work")
+async def get_work(request: GetWorkRequest) -> TaskResponse | dict :
+    """Create a task for the worker and send it as a respone."""
+    logging.info(f"Endpoint /get_work called by {request.worker} for {request.cores} work units.")
+    task = job_queue.assign_work(request.worker, amount=request.cores)
+    if task:
+        return  TaskResponse.model_validate(task) # this will convert a object to a pydantic model instance
+    else:
+        return {"message": "No work available at this time."}
 
 
 
