@@ -117,20 +117,20 @@ def smart_unzip_file(input_zip_file_path: str, output_folder_path: str, user_7z_
         raise ValueError(f"Output folder {output_folder_path} does not exist.")
 
     basename_without_ext = os.path.splitext(os.path.basename(input_zip_file_path))[0]
-    output_folder_path = os.path.join(output_folder_path, basename_without_ext)
+    study_folder_path = os.path.join(output_folder_path, basename_without_ext)
 
-    if os.path.exists(output_folder_path):
-        raise ValueError(f"Output folder {output_folder_path} already exists. Cannot unzip safely.")
+    if os.path.exists(study_folder_path):
+        raise ValueError(f"Study folder {study_folder_path} already exists. Cannot unzip safely.")
 
     method = identify_best_zip_method(user_7z_path)
     if method in {ZipMethod.SEVEN_Z_ENV, ZipMethod.SEVEN_Z_CFG}:
         # Use 7z
         seven_zip_exe = shutil.which("7z") if method == ZipMethod.SEVEN_Z_ENV else user_7z_path
-        unzip_with_7z(input_zip_file_path, output_folder_path, seven_zip_exe)
+        unzip_with_7z(input_zip_file_path, study_folder_path, seven_zip_exe)
     else:
         # Built-in zipfile
-        unzip_with_builtin(input_zip_file_path, output_folder_path)
-    return output_folder_path
+        unzip_with_builtin(input_zip_file_path, study_folder_path)
+    return study_folder_path
 
 def unzip_with_7z(input_zip_file_path: str, output_folder_path: str, seven_zip_exe: str):
     """Unzip a folder using 7z."""

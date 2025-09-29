@@ -178,12 +178,12 @@ class Task():
         self.worker = worker
         self.created_at: datetime = datetime.now()
         self.status: TaskStatus = TaskStatus.RUNNING
-        self.taskload = None
+        self.workload = None
 
     def set_workload_subset(self, amount: int, already_assigned: list[int]):
         """Set workload to a subset of length amount, excluding already_assigned."""
         available_years = [year for year in self.job.workload if year not in already_assigned]
         actual = min(amount, len(available_years))
-        self.taskload = available_years[:actual]
+        self.workload = available_years[:actual]
 
 

@@ -25,3 +25,17 @@ def robust_read_ini(path: str) -> dict:
             else:
                 print(f"Skipping line {lineno}: {line}")
     return sections
+
+
+def robust_write_ini(path: str, contents: dict) -> None:
+    """Note that this dict can have lists as values, which will be written as repeated keys."""
+    with open(path, "w", encoding="utf-8") as f:
+        for section, keys in contents.items():
+            f.write(f"[{section}]\n")
+            for key, value in keys.items():
+                if isinstance(value, list):
+                    for v in value:
+                        f.write(f"{key} = {v}\n")
+                else:
+                    f.write(f"{key} = {value}\n")
+            f.write("\n")

@@ -1,7 +1,7 @@
 import configparser
 import logging
 import os
-from utils.ini import robust_read_ini
+from utils.ini import robust_read_ini, robust_write_ini
 from utils.smart_zip import smart_zip_folder
 from utils.time_utils import get_datetime_stamp
 
@@ -95,6 +95,25 @@ class AntaresStudy:
                     if year in playlist:
                         playlist.remove(year)
         return playlist
+
+    def set_playlist(self, years: list[int]) -> None:
+        """Read the generaldata ini, wipe the playlist section, write a new one with only the specified years."""
+        logging.info("Setting playlist years using AntaresStudy object to: " + str(years))
+
+        # clean current ini
+        ini_file_path = os.path.join(self.study_path, "settings", "generaldata.ini")
+        config = robust_read_ini(ini_file_path)
+        new_config = {section: dict(config[section]) for section in config if section != "playlist"}
+
+        # add new playlist section
+        new_config["playlist"] = {}
+        new_config["playlist"]["playlist_reset"] = "false"
+        new_config["playlist"]["playlist_year +"] = [str(year) for year in years]
+
+        # write back to disk
+        robust_write_ini(ini_file_path, new_config)
+
+
 
     # static method to check if a study is a valid Antares study
     @staticmethod

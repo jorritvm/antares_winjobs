@@ -124,7 +124,7 @@ async def get_task(request: GetTaskRequest) -> GetTaskResponse | dict :
             "zip_file_path": task.job.zip_file_path,
             "study_name": task.job.study_name,
             "worker": task.worker,
-            "workload": task.taskload or [],
+            "workload": task.workload or [],
             "percentage_complete": int(task.job.percentage_complete or 0),
         }
         return GetTaskResponse.model_validate(resp)
@@ -145,7 +145,7 @@ async def task_overview(job_id: str):
                 "id": task.id,
                 "worker": task.worker,
                 "created_at": task.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                "taskload": task.taskload,
+                "workload": task.workload,
                 "status": task.status,
             })
         return {

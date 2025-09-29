@@ -9,7 +9,7 @@ import os
 
 from utils.time_utils import get_datetime_stamp
 
-LOGLEVEL = logging.INFO
+LOGLEVEL = logging.DEBUG
 
 def setup_root_logger(file_name: str):
     os.makedirs("logs", exist_ok=True)
