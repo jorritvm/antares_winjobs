@@ -2,13 +2,12 @@
 import os
 import sys
 import logging
-from time import strftime
 from typing import Annotated
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 
 from driver.jobs import Job, JobQueue
-from driver.payload_models import GetTaskRequest, GetTaskResponse
+from driver.payload_models import GetTaskRequest, GetTaskResponse, TaskDoneRequest
 from utils.config import read_config
 from utils.logger import setup_root_logger
 
@@ -114,7 +113,7 @@ async def jobs_overview():
 async def get_task(request: GetTaskRequest) -> GetTaskResponse | dict :
     """Create a task for the worker and send it as a respone."""
     logging.info(f"Endpoint /get_work called by {request.worker} for {request.cores} work units.")
-    task = job_queue.assign_work(request.worker, amount=request.cores)
+    task = job_queue.assign_task(request.worker, amount=request.cores)
     if task:
         resp = {
             "id": task.id,
@@ -180,6 +179,14 @@ async def task_details(job_id: str, task_id: str):
                 "percentage_complete": overview["percentage_complete"],
                 "task": specific_task
             }
+
+@app.post("/finish_task")
+async def finish_task(request: TaskDoneRequest) -> dict :
+    """Create a task for the worker and send it as a respone."""
+    logging.info(f"Endpoint /finish_task called.")
+    job_queue.finish_task(request)
+    return {"response": "Task marked as finished."}
+
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,4 +1,3 @@
-import copy
 from datetime import datetime
 from enum import Enum
 import itertools
@@ -9,9 +8,11 @@ from queue import PriorityQueue
 import threading
 from typing import Optional
 import uuid
+
+from driver.payload_models import TaskDoneRequest
 from utils.smart_zip import smart_unzip_file
 from utils.antares import AntaresStudy
-
+from utils.symlink import create_symlink_with_same_name
 
 class JobQueue:
     def __init__(self, persisted_queue_folder_path: str):
@@ -78,7 +79,7 @@ class JobQueue:
                 return job
         return None
 
-    def assign_work(self, worker: str, amount: int) -> "Optional[Task]":
+    def assign_task(self, worker: str, amount: int) -> "Optional[Task]":
         """Assign up to 'amount' workload items to the worker,
         returning a Task instance or None if no work is available.
         Requires a lock due to synchronized access to the queue and job tasks."""
@@ -102,6 +103,25 @@ class JobQueue:
                     return task
             # No available work found
             return None
+
+    def finish_task(self, request: TaskDoneRequest):
+        # update the job by registering a completed task
+        job = self.get_job_by_id(request.job_id)
+        if not job:
+            logging.error(f"Job {request.job_id} not found.")
+            return
+        job.task_done(request.task_id, request.success, request.output_path, request.workload)
+
+        # If all tasks are completed, move job to finished
+        if job.percentage_complete == 100:
+            logging.info(f"Job {job.id} is now 100% complete.")
+            # Remove from queue and put in finished list
+            with self.lock:
+                self.queue.queue = [item for item in self.queue.queue if item[2].id != job.id]
+            self.finished.append(job)
+
+        # make sure changes to the queues are saved
+        self.persist_state()
 
     def __repr__(self):
         # No direct peek into PriorityQueue (not thread-safe), so just return a placeholder
@@ -150,16 +170,38 @@ class Job:
         seven_zip_exe = self.config.get("7_zip_file_path", None)
         study_folder_path = smart_unzip_file(self.zip_file_path, extraction_folder_path, seven_zip_exe)
         self.antares_study = AntaresStudy(study_folder_path)
+        self.antares_study.create_output_collection_folder()
         self.workload = self.antares_study.get_active_playlist_years().copy()
 
-    #
-    # def take_work(self, amount):
-    #     actual = min(amount, self.remaining_work)
-    #     self.remaining_work -= actual
-    #     return actual
-    #
-    # def is_done(self):
-    #     return self.remaining_work <= 0
+    def task_done(self, task_id: str, success: bool, output_path: str, workload: list[int] = None):
+        # update task status
+        for task in self.tasks:
+            if task.id == task_id:
+                task.status = TaskStatus.COMPLETED if success else TaskStatus.FAILED
+                break
+
+        # make the symlinks from the worker to the driver node
+        # relies on the fact that simu are run in economy and have individual mc output activated"
+        if success:
+            driver_output_path = os.path.join(self.antares_study.output_dir, "economy", "mc-ind")
+            os.makedirs(driver_output_path, exist_ok=True)
+            worker_output_path = os.path.join(output_path, "economy", "mc-ind")
+            worker_output_years = os.listdir(worker_output_path)
+            for year in workload:
+                output_year_string = str(year+1).zfill(5) # note +1 because antares folders are 1-based
+                if output_year_string not in worker_output_years:
+                    logging.error(f"Year {output_year_string} not found in worker output at {worker_output_path} even thought the worker said it had finished it. Skipping symlink creation for this year.")
+                    continue
+                worker_output_year_full_path = os.path.join(worker_output_path, output_year_string)
+                create_symlink_with_same_name(driver_output_path, worker_output_year_full_path)
+
+        # update percentage_complete
+        total = len(self.workload)
+        amount_complete = 0
+        for task in self.tasks:
+            if task.status == TaskStatus.COMPLETED or task.status == TaskStatus.FAILED:
+                amount_complete += len(task.workload)
+        self.percentage_complete = int((amount_complete / total) * 100) if total > 0 else 0
 
     def __repr__(self):
         return f"<Job id={self.id} prio={self.priority} submitter={self.submitter}>"

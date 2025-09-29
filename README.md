@@ -16,7 +16,7 @@ The repository contains 3 modules:
 Repo is built with uv.
 Sync using `uv sync` command.
 
-## Run driver:
+## Run driver (must be done as admin because it creates symlinks):
 ```commandline
 uvicorn src.main_driver:app --reload
 ```

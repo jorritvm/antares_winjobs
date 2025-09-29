@@ -10,6 +10,7 @@ class AntaresStudy:
     def __init__(self, study_path):
         self.study_path = os.path.abspath(study_path)
         self.study_name = os.path.basename(self.study_path)
+        self.output_dir = None
 
     def get_antares_version(self) -> str:
         """Reads an antares file and returns the version string as parsed from INI format."""
@@ -48,6 +49,13 @@ class AntaresStudy:
         if len(contents) == 1 and contents[0] == "maps":
             return True
         return False
+
+    def create_output_collection_folder(self) -> None:
+        """Create the output collection folder from a timestamp."""
+        output_folder_name = get_datetime_stamp("", "_", "")
+        output_collection_path = os.path.join(self.study_path, "output", output_folder_name)
+        os.makedirs(output_collection_path, exist_ok=True)
+        self.output_dir = output_collection_path
 
     def package_study(self, output_zip_folder_path: str, user_7z_path: str = None) -> str:
         """Package the study into a zip file, excluding the output folder.

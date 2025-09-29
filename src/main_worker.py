@@ -23,7 +23,7 @@ class Worker:
         self.name = socket.gethostname() if name is None else name
         self.max_cores_to_use = self.determine_cores()
         self.antares_path = self.find_antares()
-        self.server_uri = f"http://{self.config['driver_ip']}:{self.config['driver_port']}/"
+        self.driver_uri = f"http://{self.config['driver_ip']}:{self.config['driver_port']}/"
         self.local_zip_folder_path = os.path.abspath(self.config["local_zip_folder_path"])
         self.local_study_folder_path = os.path.abspath(self.config["local_study_folder_path"])
         self.wait_time_between_requests = int(self.config["wait_time_between_requests"])
@@ -49,7 +49,7 @@ class Worker:
 
     def request_new_task(self) -> dict:
         """Notify server, get work assignment"""
-        response = requests.post(f"{self.server_uri}/get_task",
+        response = requests.post(f"{self.driver_uri}/get_task",
                                  json={"worker": self.name, "cores": self.max_cores_to_use})
         return response.json()  # Should contain model_path, years
 
@@ -85,15 +85,15 @@ class Worker:
         antares_study = AntaresStudy(study_folder_path)
         return antares_study.verify_if_last_run_was_successful()
 
-    def notify_server_done(self, task_id: str, job_id: str,
-                           workload: list[int], output_path: str, success: bool) -> None:
+    def notify_task_done(self, task_id: str, job_id: str,
+                         workload: list[int], output_path: str, success: bool) -> None:
         logging.info("Informing driver of completed work.")
         payload = {'task_id': task_id,
                    'job_id': job_id,
                    'workload': workload,
                    'output_path': output_path,
                     'success': success}
-        requests.post(f"{self.server_uri}/finish_task", json=payload)
+        requests.post(f"{self.driver_uri}/finish_task", json=payload)
 
     def work_loop(self):
         logging.info("Entering work loop.")
@@ -122,11 +122,11 @@ class Worker:
 
                 antares_study = AntaresStudy(study_folder_path)
                 last_output_folder = antares_study.get_last_output_folder()
-                self.notify_server_done(assignment["id"],
-                                        assignment["job_id"],
-                                        assignment["workload"],
-                                        last_output_folder,
-                                        success)
+                self.notify_task_done(assignment["id"],
+                                      assignment["job_id"],
+                                      assignment["workload"],
+                                      last_output_folder,
+                                      success)
 
             # wait here if we haven't reached the next time point yet
             if datetime.now() < self.wait_until_time_for_next_request:
