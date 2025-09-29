@@ -20,4 +20,4 @@ max_cores_to_use: 2
 antares_file_path: C:\program files\rte\Antares\8.8.10\bin\antares-8.8-solver.exe
 
 # enter wait time between consecutive task requests in seconds as an integer
-wait_time_between_requests: 30
+wait_time_between_requests: 300

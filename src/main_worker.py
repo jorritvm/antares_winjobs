@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import os
 import logging
 import time
+
 import requests
 import socket
 
@@ -76,13 +77,23 @@ class Worker:
         antares_study = AntaresStudy(study_folder_path)
         antares_study.set_playlist(years)
 
-    # def run_antares(self, model_dir):
-    #     # Stub: Run antares simulation
-    #     pass
-    #
-    # def notify_server_done(self, result_path):
-    #     # Stub: Notify server of completion
-    #     requests.post(f"{self.server_uri}/finish_work", json={"result_path": result_path})
+    def run_antares(self, study_folder_path: str) -> None:
+        antares_study = AntaresStudy(study_folder_path)
+        antares_study.run_antares(self.antares_path, self.max_cores_to_use)
+
+    def verify_run_correctness(self, study_folder_path: str) -> bool:
+        antares_study = AntaresStudy(study_folder_path)
+        return antares_study.verify_if_last_run_was_successful()
+
+    def notify_server_done(self, task_id: str, job_id: str,
+                           workload: list[int], output_path: str, success: bool) -> None:
+        logging.info("Informing driver of completed work.")
+        payload = {'task_id': task_id,
+                   'job_id': job_id,
+                   'workload': workload,
+                   'output_path': output_path,
+                    'success': success}
+        requests.post(f"{self.server_uri}/finish_task", json=payload)
 
     def work_loop(self):
         logging.info("Entering work loop.")
@@ -90,11 +101,13 @@ class Worker:
             # set the next equidistant time point
             self.wait_until_time_for_next_request = datetime.now() + timedelta(seconds=self.wait_time_between_requests)
 
+            # perform the loop workflow
             assignment = self.request_new_task()
-            logging.info(f"Received assignment: {assignment}")
+            logging.debug(f"Received assignment: {assignment}")
             if assignment == {"message": "No work available at this time."}:
                 logging.debug(f"{datetime.now()}: No work available, waiting {self.wait_time_between_requests} seconds.")
             else:
+                logging.info("Received work assignment from driver.")
                 if not self.verify_if_model_is_local(assignment["zip_file_path"]):
                     logging.info("Assignment study not found locally.")
                     local_zip_file_path = self.copy_model_from_driver(assignment["zip_file_path"])
@@ -103,15 +116,17 @@ class Worker:
                     logging.info("Assignment study found locally.")
                     study_folder_path = os.path.join(self.local_study_folder_path, assignment["study_name"])
 
-            self.tune_model_years(study_folder_path, assignment["workload"])
+                self.tune_model_years(study_folder_path, assignment["workload"])
+                self.run_antares(study_folder_path)
+                success = self.verify_run_correctness(study_folder_path)
 
-            # self.run_antares(model_path)
-            #
-            # result_path = os.path.join(model_path, "output")
-            # self.notify_server_done(result_path)
-
-            # only trigger if we are past the wait time, this is set up using equi-distant points in time
-            # so we trigger immediately if work time exceeds wait time
+                antares_study = AntaresStudy(study_folder_path)
+                last_output_folder = antares_study.get_last_output_folder()
+                self.notify_server_done(assignment["id"],
+                                        assignment["job_id"],
+                                        assignment["workload"],
+                                        last_output_folder,
+                                        success)
 
             # wait here if we haven't reached the next time point yet
             if datetime.now() < self.wait_until_time_for_next_request:

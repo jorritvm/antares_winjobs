@@ -1,6 +1,7 @@
 import configparser
 import logging
 import os
+import subprocess
 from utils.ini import robust_read_ini, robust_write_ini
 from utils.smart_zip import smart_zip_folder
 from utils.time_utils import get_datetime_stamp
@@ -113,7 +114,48 @@ class AntaresStudy:
         # write back to disk
         robust_write_ini(ini_file_path, new_config)
 
+    def run_antares(self, antares_path: str, max_cores_to_use: int) -> None:
+        """Run the antares simulation using the provided antares executable path and core count."""
+        logging.info(f"Running Antares simulation with {max_cores_to_use} core(s).")
+        cmd = [
+            f'"{antares_path}"',
+            f'--input="{self.study_path}"',
+            '--name=""',
+            f'--force-parallel="{max_cores_to_use}"'
+        ]
+        # Join command for Windows cmd, handle spaces
+        cmd_str = ' '.join(cmd)
+        logging.debug(f"Antares run command: {cmd_str}")
+        # run and suppress output
+        subprocess.run(cmd_str, shell=True, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
+    def get_last_output_folder(self) -> str:
+        """Get the path to the most recent output folder."""
+        output_path = os.path.join(self.study_path, "output")
+        output_dirs = [d for d in os.listdir(output_path) if os.path.isdir(os.path.join(output_path, d))]
+        if not output_dirs:
+            return None
+        most_recent = sorted(output_dirs, reverse=True)[0]
+        return os.path.join(output_path, most_recent)
+
+    def verify_if_last_run_was_successful(self) -> bool:
+        """Check if the last Antares run was successful by verifying the simulation log."""
+        logging.info("Verifying if last Antares run was successful.")
+
+        # find last folder in this output folder
+        most_recent_output_folder = self.get_last_output_folder()
+        log_file_path = os.path.join(most_recent_output_folder, "simulation.log")
+
+        # check if the last 5 lines of the log contain "Quitting the solver gracefully"
+        if not os.path.exists(log_file_path):
+            return False
+        with open(log_file_path, "r") as log_file:
+            lines = log_file.readlines()
+            last_lines = lines[-5:] if len(lines) >= 5 else lines
+            for line in last_lines:
+                if "Quitting the solver gracefully" in line:
+                    return True
+        return False
 
     # static method to check if a study is a valid Antares study
     @staticmethod
@@ -132,3 +174,7 @@ class AntaresStudy:
         return True
 
 
+if __name__ == "__main__":
+    study_path = r"C:\links\LENOVO_C\dev\python\antares_winjobs\data\worker\study\20250923_222610-ant8.8"
+    antares_study = AntaresStudy(study_path)
+    print(antares_study.verify_if_last_run_was_successful())
