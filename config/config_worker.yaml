@@ -14,10 +14,10 @@ local_study_folder_path: C:\links\LENOVO_C\dev\python\antares_winjobs\data\worke
 7_zip_file_path: C:/Program Files/7-Zip/7z.exe # leave empty if 7-Zip is in PATH or not on system
 
 # max number of CPU cores to use, set to 0 to use all available cores
-max_cores_to_use: 2
+max_cores_to_use: 8
 
 # absolute path to Antares solver executable
 antares_file_path: C:\program files\rte\Antares\8.8.10\bin\antares-8.8-solver.exe
 
 # enter wait time between consecutive task requests in seconds as an integer
-wait_time_between_requests: 300
+wait_time_between_requests: 10

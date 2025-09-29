@@ -8,7 +8,6 @@ import requests
 from utils.antares import AntaresStudy
 from utils.config import read_config
 from utils.logger import setup_root_logger
-from utils.smart_zip import smart_zip_folder
 
 USER_CONFIG_FILE_NAME = "config_user.yaml"
 
