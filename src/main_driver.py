@@ -2,12 +2,13 @@
 import os
 import sys
 import logging
+from time import strftime
 from typing import Annotated
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 
 from driver.jobs import Job, JobQueue
-from driver.payload_models import GetWorkRequest, TaskResponse
+from driver.payload_models import GetTaskRequest, GetTaskResponse
 from utils.config import read_config
 from utils.logger import setup_root_logger
 
@@ -109,17 +110,76 @@ async def jobs_overview():
         })
     return jobs
 
-@app.post("/get_work")
-async def get_work(request: GetWorkRequest) -> TaskResponse | dict :
+@app.post("/get_task")
+async def get_task(request: GetTaskRequest) -> GetTaskResponse | dict :
     """Create a task for the worker and send it as a respone."""
     logging.info(f"Endpoint /get_work called by {request.worker} for {request.cores} work units.")
     task = job_queue.assign_work(request.worker, amount=request.cores)
     if task:
-        return  TaskResponse.model_validate(task) # this will convert a object to a pydantic model instance
+        resp = {
+            "id": task.id,
+            "job_id": task.job.id,
+            "submitter": task.job.submitter,
+            "priority": task.job.priority,
+            "zip_file_path": task.job.zip_file_path,
+            "study_name": task.job.study_name,
+            "worker": task.worker,
+            "workload": task.taskload or [],
+            "percentage_complete": int(task.job.percentage_complete or 0),
+        }
+        return GetTaskResponse.model_validate(resp)
     else:
         return {"message": "No work available at this time."}
 
+@app.get("/task_overview/{job_id}")
+async def task_overview(job_id: str):
+    logging.info(f"Endpoint /task_overview/{job_id} called.")
 
+    job = job_queue.get_job_by_id(job_id)
+    if job is None:
+        return {"error": "Job not found."}
+    else:
+        tasks = []
+        for task in job.tasks:
+            tasks.append({
+                "id": task.id,
+                "worker": task.worker,
+                "created_at": task.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                "taskload": task.taskload,
+                "status": task.status,
+            })
+        return {
+            "job_id": job.id,
+            "submitter": job.submitter,
+            "priority": job.priority,
+            "percentage_complete": job.percentage_complete,
+            "tasks": tasks
+        }
+
+@app.get("/task_details/{job_id}/{task_id}")
+async def task_details(job_id: str, task_id: str):
+    logging.info(f"Endpoint /task_details/{task_id} called.")
+    # note: not very efficient but ok for now, task lists wont be huge
+    overview = await task_overview(job_id)
+    if overview == {"error": "Job not found."}:
+        return {"error": "Job not found."}
+    else:
+        specific_task = None
+        for task in overview["tasks"]:
+            if task["id"] == task_id:
+                specific_task = task
+                break
+        if specific_task is None:
+            return {"error": "Task not found."}
+        else:
+            print(overview)
+            return {
+                "job_id": overview["job_id"],
+                "submitter": overview["submitter"],
+                "priority": overview["priority"],
+                "percentage_complete": overview["percentage_complete"],
+                "task": specific_task
+            }
 
 if __name__ == "__main__":
     import uvicorn

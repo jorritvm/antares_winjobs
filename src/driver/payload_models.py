@@ -1,11 +1,10 @@
 from pydantic import BaseModel, ConfigDict
 
-class GetWorkRequest(BaseModel):
+class GetTaskRequest(BaseModel):
     worker: str
     cores: int
 
-class TaskResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)  # Enables attribute-based validation
+class GetTaskResponse(BaseModel):
     id: str
     job_id: str
     submitter: str

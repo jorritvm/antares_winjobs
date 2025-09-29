@@ -1,4 +1,6 @@
 import copy
+from datetime import datetime
+from enum import Enum
 import itertools
 import logging
 import os
@@ -65,6 +67,17 @@ class JobQueue:
         self.queue.put((job.priority, next(self.counter), job))
         self.persist_state()
 
+    def get_job_by_id(self, job_id: str) -> "Optional[Job]":
+        # Check queued jobs
+        for prio, cnt, job in list(self.queue.queue):
+            if job.id == job_id:
+                return job
+        # Check finished jobs
+        for job in self.finished:
+            if job.id == job_id:
+                return job
+        return None
+
     def assign_work(self, worker: str, amount: int) -> "Optional[Task]":
         """Assign up to 'amount' workload items to the worker,
         returning a Task instance or None if no work is available.
@@ -85,6 +98,7 @@ class JobQueue:
                     task = Task(job, worker)
                     task.set_workload_subset(amount, already_assigned)
                     job.tasks.append(task)
+                    self.persist_state() # make sure the work assignment is saved
                     return task
             # No available work found
             return None
@@ -150,20 +164,26 @@ class Job:
     def __repr__(self):
         return f"<Job id={self.id} prio={self.priority} submitter={self.submitter}>"
 
-class Task(Job):
+class TaskStatus(Enum):
+    # PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+class Task():
+    """A task will always subclass from a job"""
     def __init__(self, job: Job, worker: str):
-        # Deep copy all attributes from Job
-        for attr, value in job.__dict__.items():
-            setattr(self, attr, copy.deepcopy(value))
-        # Fix id confusion
-        self.job_id = self.id  # keep reference to parent job id
         self.id = str(uuid.uuid4()) # unique task id
-        # Add worker field
+        self.job = job # reference parent Job instance
         self.worker = worker
+        self.created_at: datetime = datetime.now()
+        self.status: TaskStatus = TaskStatus.RUNNING
+        self.taskload = None
 
     def set_workload_subset(self, amount: int, already_assigned: list[int]):
         """Set workload to a subset of length amount, excluding already_assigned."""
-        available_years = [year for year in self.workload if year not in already_assigned]
+        available_years = [year for year in self.job.workload if year not in already_assigned]
         actual = min(amount, len(available_years))
-        self.workload = available_years[:actual]
+        self.taskload = available_years[:actual]
+
 
