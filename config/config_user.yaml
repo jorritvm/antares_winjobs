@@ -1,2 +1,11 @@
+# enter IPv4 address for the driver
+driver_ip: 127.0.0.1
+
+# enter port for the driver
+driver_port: 8000
+
 # enter aboslute path to 7z.exe. Leave empty if 7-Zip is already on PATH or not on system at all
 7_zip_file_path: C:/Program Files/7-Zip/7z.exe
+
+# enter absolute path where clean study zip files can be stored, make sure this path uses a symlink known by the driver too
+local_zip_folder_path: data/user/zip
