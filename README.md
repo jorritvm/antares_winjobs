@@ -3,17 +3,17 @@ Antares winjobs is a windows based distributed job scheduling system.
 It allows you to schedule and manage antares simulation jobs across multiple Windows machines in a network.
 
 <!-- TOC -->
-* [Antares Winjobs](#antares-winjobs)
-  * [How it works](#how-it-works)
-  * [Supported antares versions](#supported-antares-versions)
-  * [How to set up your local copy](#how-to-set-up-your-local-copy)
-  * [How to use](#how-to-use)
-    * [Run a driver](#run-a-driver)
-    * [Run a worker](#run-a-worker)
-    * [Run a user](#run-a-user)
-  * [Additional scripts](#additional-scripts)
-  * [Future work](#future-work)
-  * [Author](#author)
+- [Antares Winjobs](#antares-winjobs)
+  - [How it works](#how-it-works)
+  - [Supported antares versions](#supported-antares-versions)
+  - [How to set up your local copy](#how-to-set-up-your-local-copy)
+  - [How to use](#how-to-use)
+    - [Run a driver](#run-a-driver)
+    - [Run a worker](#run-a-worker)
+    - [Run a user](#run-a-user)
+  - [Additional scripts](#additional-scripts)
+  - [Future work](#future-work)
+  - [Author](#author)
 <!-- TOC -->
 
 ## How it works
@@ -22,9 +22,10 @@ The system contains 3 actors:
 - **driver:** manages job prioritization, task distribution, collects output symlinks, provides overview endpoints.
 - **worker:** executes tasks ad infinitum.
 
-A sequence diagram of a standard interaction can be found [here](docs/sequence_diagram.md).
-
 This system relies heavily on windows symbolic links. Read more about them [here](docs/junctions.md).
+A sequence diagram of a standard interaction can be found [here](docs/sequence_diagram.md).
+Another component drawing is depiced below.
+[<img src="docs/antares_winflow.png" width="400"/>](docs/antares_winflow.png)
 
 
 ## Supported antares versions
