@@ -22,9 +22,9 @@ The system contains 3 actors:
 - **driver:** manages job prioritization, task distribution, collects output symlinks, provides overview endpoints.
 - **worker:** executes tasks ad infinitum.
 
-This system relies heavily on windows symbolic links. Read more about them [here](docs/junctions.md).
-A sequence diagram of a standard interaction can be found [here](docs/sequence_diagram.md).
-Another component drawing is depiced below.
+This system relies heavily on windows symbolic links. Read more about them [here](docs/junctions.md).  
+A sequence diagram of a standard interaction can be found [here](docs/sequence_diagram.md).  
+Another component drawing is depicted below.
 [<img src="docs/antares_winflow.png" width="400"/>](docs/antares_winflow.png)
 
 
