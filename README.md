@@ -24,7 +24,8 @@ The system contains 3 actors:
 
 This system relies heavily on windows symbolic links. Read more about them [here](docs/junctions.md).  
 A sequence diagram of a standard interaction can be found [here](docs/sequence_diagram.md).  
-Another component drawing is depicted below.
+Another component drawing is depicted below.  
+
 [<img src="docs/antares_winflow.png" width="400"/>](docs/antares_winflow.png)
 
 
